@@ -1,50 +1,43 @@
 package goalRsa
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 )
 
-func NewRsaKeyPair(bits int) (*pem.Block, *pem.Block, error) {
-	privateKey, error := rsa.GenerateKey(rand.Reader, bits)
-	if error != nil {
-		return nil, nil, error
+func NewRsaKeyPair(bits int) (string, string, error) {
+	// Generate new key
+	privateKey, errorPrivateKeyGeneration := rsa.GenerateKey(rand.Reader, bits)
+	if errorPrivateKeyGeneration != nil {
+		return "", "", errorPrivateKeyGeneration
 	}
-
-	// dump private key to file
+	// Format private key to pem
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
 	privateKeyBlock := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: privateKeyBytes,
 	}
-	// privatePem, err := os.Create("private.pem")
-	// if err != nil {
-	//     return nil, nil, error
-	// }
-	// err = pem.Encode(privatePem, privateKeyBlock)
-	// if err != nil {
-	//     return nil, nil, error
-	// }
-
-	// dump public key to file
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		return nil, nil, error
+	privatePem := new(bytes.Buffer)
+	errorCreatePrivatePem := pem.Encode(privatePem, privateKeyBlock)
+	if errorCreatePrivatePem != nil {
+		return "", "", errorCreatePrivatePem
+	}
+	// Format public key to pem
+	publicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if errorPublicKeyBytes != nil {
+		return "", "", errorPublicKeyBytes
 	}
 	publicKeyBlock := &pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: publicKeyBytes,
 	}
-	// publicPem, err := os.Create("public.pem")
-	// if err != nil {
-	//     return nil, nil, error
-	// }
-	// err = pem.Encode(publicPem, publicKeyBlock)
-	// if err != nil {
-	//     return nil, nil, error
-	// }
-
-	return privateKeyBlock, publicKeyBlock, nil
+	publicPem := new(bytes.Buffer)
+	errorCreatePublicPem := pem.Encode(publicPem, publicKeyBlock)
+	if errorCreatePublicPem != nil {
+		return "", "", errorCreatePublicPem
+	}
+	return privatePem.String(), publicPem.String(), nil
 }
