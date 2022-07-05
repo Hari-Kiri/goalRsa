@@ -39,5 +39,6 @@ func NewRsaKeyPair(bits int) (string, string, error) {
 	if errorCreatePublicPem != nil {
 		return "", "", errorCreatePublicPem
 	}
+	// Return result
 	return privatePem.String(), publicPem.String(), nil
 }
