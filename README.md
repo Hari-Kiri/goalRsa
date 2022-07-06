@@ -1,2 +1,2 @@
 # goalRsa
-Library for generating RSA key pair
+Library for RSA encryption
