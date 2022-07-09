@@ -59,23 +59,23 @@ func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string)
 		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "RSA PRIVATE KEY")
 	}
 	// Decode private key
-	decodePrivateKey, errorDecodePrivateKey := x509.ParsePKCS1PrivateKey(extractPrivateKey.Bytes)
+	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS1PrivateKey(extractPrivateKey.Bytes)
 	if errorDecodePrivateKey != nil {
-		return "", errorDecodePrivateKey
+		return "", fmt.Errorf("key parsing failed: %s", errorDecodePrivateKey)
 	}
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return "", errorDecodeEncryptedData
+		return "", fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
 	}
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
 		sha256.New(),
 		rand.Reader,
-		decodePrivateKey,
+		parsePKCS1PrivateKey,
 		decodeEncryptedData,
 		[]byte("OAEP Encrypted"))
 	if errorDecryptData != nil {
-		return "", errorDecryptData
+		return "", fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
 	return string(decryptData), nil
 }
