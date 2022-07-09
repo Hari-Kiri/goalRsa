@@ -48,9 +48,10 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 }
 
 // Decrypt ecrypted data with private key
-func RsaOaepDecryptWithPrivateKey(privateKey []byte, encryptedData string) (string, error) {
+func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string) (string, error) {
+	privateKeyByte := []byte(privateKey)
 	// Extract private key
-	extractPrivateKey, result := pem.Decode(privateKey)
+	extractPrivateKey, result := pem.Decode(privateKeyByte)
 	if extractPrivateKey == nil {
 		return "", fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", result))
 	}
@@ -63,7 +64,7 @@ func RsaOaepDecryptWithPrivateKey(privateKey []byte, encryptedData string) (stri
 		return "", errorDecodePrivateKey
 	}
 	// Decode encrypted data from base64 to byte array
-	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(encryptedData)
+	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
 		return "", errorDecodeEncryptedData
 	}
