@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -19,10 +18,13 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 		return nil, nil, errorGenerateKey
 	}
 	// Format private key to pem
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(generateKey)
+	convertPrivateKeyBytes, errorConvertPrivateKeyBytes := x509.MarshalPKCS8PrivateKey(generateKey)
+	if errorConvertPrivateKeyBytes != nil {
+		return nil, nil, errorConvertPrivateKeyBytes
+	}
 	privateKeyBlock := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
-		Bytes: privateKeyBytes,
+		Bytes: convertPrivateKeyBytes,
 	}
 	privateKeyPem := new(bytes.Buffer)
 	errorCreatePrivatePem := pem.Encode(privateKeyPem, privateKeyBlock)
@@ -58,7 +60,7 @@ func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string)
 		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "RSA PRIVATE KEY")
 	}
 	// Decode private key
-	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS1PrivateKey(extractPrivateKey.Bytes)
+	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS8PrivateKey(extractPrivateKey.Bytes)
 	if errorDecodePrivateKey != nil {
 		return "", fmt.Errorf("key parsing failed: %s", errorDecodePrivateKey)
 	}
@@ -67,12 +69,10 @@ func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string)
 	if errorDecodeEncryptedData != nil {
 		return "", fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
 	}
-	decryptData, errorDecryptData := rsa.DecryptOAEP(
-		sha256.New(),
-		nil,
-		parsePKCS1PrivateKey,
-		decodeEncryptedData,
-		nil)
+	decryptData, errorDecryptData := rsa.DecryptPKCS1v15(
+		rand.Reader,
+		parsePKCS1PrivateKey.(*rsa.PrivateKey),
+		decodeEncryptedData)
 	if errorDecryptData != nil {
 		return "", fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
