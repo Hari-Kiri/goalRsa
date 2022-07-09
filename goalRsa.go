@@ -69,10 +69,10 @@ func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string)
 	}
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
 		sha256.New(),
-		rand.Reader,
+		nil,
 		parsePKCS1PrivateKey,
 		decodeEncryptedData,
-		[]byte("OAEP Encrypted"))
+		nil)
 	if errorDecryptData != nil {
 		return "", fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
