@@ -4,41 +4,77 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 )
 
-func NewRsaKeyPair(bits int) (string, string, error) {
+// Generate new key pair
+func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 	// Generate new key
-	privateKey, errorPrivateKeyGeneration := rsa.GenerateKey(rand.Reader, bits)
-	if errorPrivateKeyGeneration != nil {
-		return "", "", errorPrivateKeyGeneration
+	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
+	if errorGenerateKey != nil {
+		return nil, nil, errorGenerateKey
 	}
 	// Format private key to pem
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(generateKey)
 	privateKeyBlock := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: privateKeyBytes,
 	}
-	privatePem := new(bytes.Buffer)
-	errorCreatePrivatePem := pem.Encode(privatePem, privateKeyBlock)
+	privateKeyPem := new(bytes.Buffer)
+	errorCreatePrivatePem := pem.Encode(privateKeyPem, privateKeyBlock)
 	if errorCreatePrivatePem != nil {
-		return "", "", errorCreatePrivatePem
+		return nil, nil, errorCreatePrivatePem
 	}
 	// Format public key to pem
-	publicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	publicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
 	if errorPublicKeyBytes != nil {
-		return "", "", errorPublicKeyBytes
+		return nil, nil, errorPublicKeyBytes
 	}
 	publicKeyBlock := &pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: publicKeyBytes,
 	}
-	publicPem := new(bytes.Buffer)
-	errorCreatePublicPem := pem.Encode(publicPem, publicKeyBlock)
+	publicKeyPem := new(bytes.Buffer)
+	errorCreatePublicPem := pem.Encode(publicKeyPem, publicKeyBlock)
 	if errorCreatePublicPem != nil {
-		return "", "", errorCreatePublicPem
+		return nil, nil, errorCreatePublicPem
 	}
 	// Return result
-	return privatePem.String(), publicPem.String(), nil
+	return privateKeyPem, publicKeyPem, nil
+}
+
+// Decrypt ecrypted data with private key
+func RsaOaepDecryptWithPrivateKey(privateKey []byte, encryptedData string) (string, error) {
+	// Extract private key
+	extractPrivateKey, result := pem.Decode(privateKey)
+	if extractPrivateKey == nil {
+		return "", fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", result))
+	}
+	if extractPrivateKey.Type != "RSA PRIVATE KEY" {
+		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "RSA PRIVATE KEY")
+	}
+	// Decode private key
+	decodePrivateKey, errorDecodePrivateKey := x509.ParsePKCS1PrivateKey(extractPrivateKey.Bytes)
+	if errorDecodePrivateKey != nil {
+		return "", errorDecodePrivateKey
+	}
+	// Decode encrypted data from base64 to byte array
+	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(encryptedData)
+	if errorDecodeEncryptedData != nil {
+		return "", errorDecodeEncryptedData
+	}
+	decryptData, errorDecryptData := rsa.DecryptOAEP(
+		sha256.New(),
+		rand.Reader,
+		decodePrivateKey,
+		decodeEncryptedData,
+		[]byte("OAEP Encrypted"))
+	if errorDecryptData != nil {
+		return "", errorDecryptData
+	}
+	return string(decryptData), nil
 }
