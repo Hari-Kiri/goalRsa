@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 )
 
 // Generate new key pair
@@ -49,7 +50,9 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 
 // Decrypt ecrypted data with private key
 func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string) (string, error) {
-	privateKeyByte := []byte(privateKey)
+	keyBuffer := new(bytes.Buffer)
+	keyBuffer.WriteString(privateKey)
+	privateKeyByte, _ := ioutil.ReadAll(keyBuffer)
 	// Extract private key
 	extractPrivateKey, result := pem.Decode(privateKeyByte)
 	if extractPrivateKey == nil {
