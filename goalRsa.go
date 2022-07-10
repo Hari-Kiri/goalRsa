@@ -56,8 +56,8 @@ func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string)
 	if extractPrivateKey == nil {
 		return "", fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", result))
 	}
-	if extractPrivateKey.Type != "RSA PRIVATE KEY" {
-		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "RSA PRIVATE KEY")
+	if extractPrivateKey.Type != "PRIVATE KEY" {
+		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "PRIVATE KEY")
 	}
 	// Decode private key
 	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS8PrivateKey(extractPrivateKey.Bytes)
