@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -50,31 +51,36 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 }
 
 // Decrypt ecrypted data with private key
-func RsaOaepDecryptWithPrivateKey(privateKey string, base64EncryptedData string) (string, error) {
+func DecryptRSAWithPrivateKey(pemFormatPKCS8PrivateKey string, base64EncryptedData string) (string, error) {
+	var result string
 	// Extract private key
-	extractPrivateKey, result := pem.Decode([]byte(privateKey))
+	extractPrivateKey, rest := pem.Decode([]byte(pemFormatPKCS8PrivateKey))
 	if extractPrivateKey == nil {
-		return "", fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", result))
+		return result, fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", rest))
 	}
 	if extractPrivateKey.Type != "PRIVATE KEY" {
-		return "", fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "PRIVATE KEY")
+		return result, fmt.Errorf("not expected key type %q, expected %q", extractPrivateKey.Type, "PRIVATE KEY")
 	}
 	// Decode private key
 	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS8PrivateKey(extractPrivateKey.Bytes)
 	if errorDecodePrivateKey != nil {
-		return "", fmt.Errorf("key parsing failed: %s", errorDecodePrivateKey)
+		return result, fmt.Errorf("key parsing failed: %s", errorDecodePrivateKey)
 	}
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return "", fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
 	}
-	decryptData, errorDecryptData := rsa.DecryptPKCS1v15(
+	// Decrypt encrypted data using RSA OAEP
+	decryptData, errorDecryptData := rsa.DecryptOAEP(
+		sha256.New(),
 		rand.Reader,
 		parsePKCS1PrivateKey.(*rsa.PrivateKey),
-		decodeEncryptedData)
+		decodeEncryptedData,
+		nil)
+	result = string(decryptData)
 	if errorDecryptData != nil {
-		return "", fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
-	return string(decryptData), nil
+	return result, nil
 }
