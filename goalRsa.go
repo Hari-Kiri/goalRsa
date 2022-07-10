@@ -77,7 +77,7 @@ func DecryptRSAWithPrivateKey(pemFormatPKCS8PrivateKey string, base64EncryptedDa
 		rand.Reader,
 		parsePKCS1PrivateKey.(*rsa.PrivateKey),
 		decodeEncryptedData,
-		nil)
+		[]byte("OAEP Encrypted"))
 	result = string(decryptData)
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
