@@ -23,7 +23,7 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 		return nil, nil, errorConvertPrivateKeyBytes
 	}
 	privateKeyBlock := &pem.Block{
-		Type:  "RSA PRIVATE KEY",
+		Type:  "PRIVATE KEY",
 		Bytes: convertPrivateKeyBytes,
 	}
 	privateKeyPem := new(bytes.Buffer)
