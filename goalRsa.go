@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -71,16 +70,13 @@ func DecryptRSAWithPrivateKey(pemFormatPKCS8PrivateKey string, base64EncryptedDa
 	if errorDecodeEncryptedData != nil {
 		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
 	}
-	// Decrypt encrypted data using RSA OAEP
-	decryptData, errorDecryptData := rsa.DecryptOAEP(
-		sha256.New(),
+	decryptData, errorDecryptData := rsa.DecryptPKCS1v15(
 		rand.Reader,
 		parsePKCS1PrivateKey.(*rsa.PrivateKey),
-		decodeEncryptedData,
-		[]byte("OAEP Encrypted"))
-	result = string(decryptData)
+		decodeEncryptedData)
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
+	result = string(decryptData)
 	return result, nil
 }
