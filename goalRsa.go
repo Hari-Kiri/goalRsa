@@ -224,7 +224,7 @@ func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 
 // Encrypt data with RSA public key. This method using RSA padding PKCS#1 v1.5.
 // WARNING: encrypt plaintext with this method is dangerous. Please use encryption method with padding OAEP.
-func EncryptRSAPKCS1v15(pemFormatPKCS8PublicKey string, dataToEncrypt string, label string) (string, error) {
+func EncryptRSAPKCS1v15(pemFormatPKCS8PublicKey string, dataToEncrypt string) (string, error) {
 	var result string
 	// Extract RSA public key from string PEM format
 	parsePKCS1PublicKey, errorParsePKCS1PublicKey := extractRSAPublicKey(pemFormatPKCS8PublicKey)
