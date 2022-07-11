@@ -115,7 +115,7 @@ func DecryptRSAPKCS1v15(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 }
 
 // Decrypt encrypted data with RSA private key. This method using RSA padding OAEP with Md5 hash.
-func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label []byte) (string, error) {
+func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label string) (string, error) {
 	var result string
 	// Extract RSA private key from string PEM format
 	parsePKCS1PrivateKey, errorParsePKCS1PrivateKey := extractRSAPrivateKey(pemFormatPKCS8PrivateKey)
@@ -133,7 +133,7 @@ func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData stri
 		rand.Reader,
 		parsePKCS1PrivateKey,
 		decodeEncryptedData,
-		label)
+		[]byte(label))
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
@@ -142,7 +142,7 @@ func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData stri
 }
 
 // Decrypt encrypted data with RSA private key. This method using RSA padding OAEP with Sha1 hash.
-func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label []byte) (string, error) {
+func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label string) (string, error) {
 	var result string
 	// Extract RSA private key from string PEM format
 	parsePKCS1PrivateKey, errorParsePKCS1PrivateKey := extractRSAPrivateKey(pemFormatPKCS8PrivateKey)
@@ -160,7 +160,7 @@ func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 		rand.Reader,
 		parsePKCS1PrivateKey,
 		decodeEncryptedData,
-		label)
+		[]byte(label))
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
@@ -169,7 +169,7 @@ func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 }
 
 // Decrypt encrypted data with RSA private key. This method using RSA padding OAEP with Sha256 hash.
-func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label []byte) (string, error) {
+func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label string) (string, error) {
 	var result string
 	// Extract RSA private key from string PEM format
 	parsePKCS1PrivateKey, errorParsePKCS1PrivateKey := extractRSAPrivateKey(pemFormatPKCS8PrivateKey)
@@ -187,7 +187,7 @@ func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 		rand.Reader,
 		parsePKCS1PrivateKey,
 		decodeEncryptedData,
-		label)
+		[]byte(label))
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
@@ -196,7 +196,7 @@ func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 }
 
 // Decrypt encrypted data with RSA private key. This method using RSA padding OAEP with Sha512 hash.
-func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label []byte) (string, error) {
+func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData string, label string) (string, error) {
 	var result string
 	// Extract RSA private key from string PEM format
 	parsePKCS1PrivateKey, errorParsePKCS1PrivateKey := extractRSAPrivateKey(pemFormatPKCS8PrivateKey)
@@ -214,7 +214,7 @@ func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 		rand.Reader,
 		parsePKCS1PrivateKey,
 		decodeEncryptedData,
-		label)
+		[]byte(label))
 	if errorDecryptData != nil {
 		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
 	}
