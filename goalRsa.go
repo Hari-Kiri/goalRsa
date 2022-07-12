@@ -19,7 +19,7 @@ func extractRSAPrivateKey(pemFormatPKCS8PrivateKey string) (*rsa.PrivateKey, err
 	// Extract private key
 	extractPrivateKey, rest := pem.Decode([]byte(pemFormatPKCS8PrivateKey))
 	if extractPrivateKey == nil {
-		return nil, fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", rest))
+		return nil, fmt.Errorf("cannot read key, no pem encoded data: %q", fmt.Sprintf("%v", rest))
 	}
 	if extractPrivateKey.Type != "PRIVATE KEY" {
 		return nil, fmt.Errorf("expected key type %q, provided key type %q", "PRIVATE KEY", extractPrivateKey.Type)
@@ -27,7 +27,7 @@ func extractRSAPrivateKey(pemFormatPKCS8PrivateKey string) (*rsa.PrivateKey, err
 	// Decode private key
 	parsePKCS1PrivateKey, errorDecodePrivateKey := x509.ParsePKCS8PrivateKey(extractPrivateKey.Bytes)
 	if errorDecodePrivateKey != nil {
-		return nil, fmt.Errorf("key parsing failed: %s", errorDecodePrivateKey)
+		return nil, fmt.Errorf("key parsing failed: %q", errorDecodePrivateKey)
 	}
 	return parsePKCS1PrivateKey.(*rsa.PrivateKey), nil
 }
@@ -37,7 +37,7 @@ func extractRSAPublicKey(pemFormatPKCS8PublicKey string) (*rsa.PublicKey, error)
 	// Extract public key
 	extractPublicKey, rest := pem.Decode([]byte(pemFormatPKCS8PublicKey))
 	if extractPublicKey == nil {
-		return nil, fmt.Errorf("cannot read key, no pem encoded data: %s", fmt.Sprintf("%v", rest))
+		return nil, fmt.Errorf("cannot read key, no pem encoded data: %q", fmt.Sprintf("%v", rest))
 	}
 	if extractPublicKey.Type != "PUBLIC KEY" {
 		return nil, fmt.Errorf("expected key type %q, provided key type %q", "PUBLIC KEY", extractPublicKey.Type)
@@ -45,7 +45,7 @@ func extractRSAPublicKey(pemFormatPKCS8PublicKey string) (*rsa.PublicKey, error)
 	// Decode public key
 	parsePKCS1PublicKey, errorDecodePublicKey := x509.ParsePKIXPublicKey(extractPublicKey.Bytes)
 	if errorDecodePublicKey != nil {
-		return nil, fmt.Errorf("key parsing failed: %s", errorDecodePublicKey)
+		return nil, fmt.Errorf("key parsing failed: %q", errorDecodePublicKey)
 	}
 	return parsePKCS1PublicKey.(*rsa.PublicKey), nil
 }
@@ -100,7 +100,7 @@ func DecryptRSAPKCS1v15(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %q", errorDecodeEncryptedData)
 	}
 	// Decrypt data
 	decryptData, errorDecryptData := rsa.DecryptPKCS1v15(
@@ -108,7 +108,7 @@ func DecryptRSAPKCS1v15(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 		parsePKCS1PrivateKey,
 		decodeEncryptedData)
 	if errorDecryptData != nil {
-		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %q", errorDecryptData)
 	}
 	result = string(decryptData)
 	return result, nil
@@ -125,7 +125,7 @@ func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData stri
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %q", errorDecodeEncryptedData)
 	}
 	// Decrypt data
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
@@ -135,7 +135,7 @@ func DecryptRSAOAEPMd5(pemFormatPKCS8PrivateKey string, base64EncryptedData stri
 		decodeEncryptedData,
 		[]byte(label))
 	if errorDecryptData != nil {
-		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %q", errorDecryptData)
 	}
 	result = string(decryptData)
 	return result, nil
@@ -152,7 +152,7 @@ func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %q", errorDecodeEncryptedData)
 	}
 	// Decrypt data
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
@@ -162,7 +162,7 @@ func DecryptRSAOAEPSha1(pemFormatPKCS8PrivateKey string, base64EncryptedData str
 		decodeEncryptedData,
 		[]byte(label))
 	if errorDecryptData != nil {
-		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %q", errorDecryptData)
 	}
 	result = string(decryptData)
 	return result, nil
@@ -179,7 +179,7 @@ func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %q", errorDecodeEncryptedData)
 	}
 	// Decrypt data
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
@@ -189,7 +189,7 @@ func DecryptRSAOAEPSha256(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 		decodeEncryptedData,
 		[]byte(label))
 	if errorDecryptData != nil {
-		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %q", errorDecryptData)
 	}
 	result = string(decryptData)
 	return result, nil
@@ -206,7 +206,7 @@ func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 	// Decode encrypted data from base64 to byte array
 	decodeEncryptedData, errorDecodeEncryptedData := base64.StdEncoding.DecodeString(base64EncryptedData)
 	if errorDecodeEncryptedData != nil {
-		return result, fmt.Errorf("base64EncryptedData decoding failed: %s", errorDecodeEncryptedData)
+		return result, fmt.Errorf("base64EncryptedData decoding failed: %q", errorDecodeEncryptedData)
 	}
 	// Decrypt data
 	decryptData, errorDecryptData := rsa.DecryptOAEP(
@@ -216,7 +216,7 @@ func DecryptRSAOAEPSha512(pemFormatPKCS8PrivateKey string, base64EncryptedData s
 		decodeEncryptedData,
 		[]byte(label))
 	if errorDecryptData != nil {
-		return result, fmt.Errorf("data decrypting failed: %s", errorDecryptData)
+		return result, fmt.Errorf("data decrypting failed: %q", errorDecryptData)
 	}
 	result = string(decryptData)
 	return result, nil
@@ -237,7 +237,7 @@ func EncryptRSAPKCS1v15(pemFormatPKCS8PublicKey string, dataToEncrypt string) (s
 		parsePKCS1PublicKey,
 		[]byte(dataToEncrypt))
 	if errorEncryptData != nil {
-		return result, fmt.Errorf("data encrypting failed: %s", encryptData)
+		return result, fmt.Errorf("data encrypting failed: %q", encryptData)
 	}
 	result = base64.StdEncoding.EncodeToString(encryptData)
 	return result, nil
@@ -259,7 +259,7 @@ func EncryptRSAOAEPMd5(pemFormatPKCS8PublicKey string, dataToEncrypt string, lab
 		[]byte(dataToEncrypt),
 		[]byte(label))
 	if errorEncryptData != nil {
-		return result, fmt.Errorf("data encrypting failed: %s", encryptData)
+		return result, fmt.Errorf("data encrypting failed: %q", encryptData)
 	}
 	result = base64.StdEncoding.EncodeToString(encryptData)
 	return result, nil
@@ -281,7 +281,7 @@ func EncryptRSAOAEPSha1(pemFormatPKCS8PublicKey string, dataToEncrypt string, la
 		[]byte(dataToEncrypt),
 		[]byte(label))
 	if errorEncryptData != nil {
-		return result, fmt.Errorf("data encrypting failed: %s", encryptData)
+		return result, fmt.Errorf("data encrypting failed: %q", encryptData)
 	}
 	result = base64.StdEncoding.EncodeToString(encryptData)
 	return result, nil
@@ -303,7 +303,7 @@ func EncryptRSAOAEPSha256(pemFormatPKCS8PublicKey string, dataToEncrypt string, 
 		[]byte(dataToEncrypt),
 		[]byte(label))
 	if errorEncryptData != nil {
-		return result, fmt.Errorf("data encrypting failed: %s", encryptData)
+		return result, fmt.Errorf("data encrypting failed: %q", encryptData)
 	}
 	result = base64.StdEncoding.EncodeToString(encryptData)
 	return result, nil
@@ -325,7 +325,7 @@ func EncryptRSAOAEPSha512(pemFormatPKCS8PublicKey string, dataToEncrypt string, 
 		[]byte(dataToEncrypt),
 		[]byte(label))
 	if errorEncryptData != nil {
-		return result, fmt.Errorf("data encrypting failed: %s", encryptData)
+		return result, fmt.Errorf("data encrypting failed: %q", encryptData)
 	}
 	result = base64.StdEncoding.EncodeToString(encryptData)
 	return result, nil
