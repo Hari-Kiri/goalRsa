@@ -50,25 +50,27 @@ func extractRSAPublicKey(pemFormatPKCS8PublicKey string) (*rsa.PublicKey, error)
 	return parsePKCS1PublicKey.(*rsa.PublicKey), nil
 }
 
-// Generate new key pair
-func NewRsaKeyPair(keyBitsSize int) ([]byte, []byte, error) {
-	// Generate new key
+// Generate new key pair. It will return key in base64 encoding.
+func NewRsaKeyPair(keyBitsSize int) (string, string, error) {
+	// Generate new rsa key
 	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
 	if errorGenerateKey != nil {
-		return nil, nil, errorGenerateKey
+		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGenerateKey
 	}
+	// Generate private key
 	generatePrivateKey, errorGeneratePrivateKey := x509.MarshalPKCS8PrivateKey(generateKey)
 	if errorGeneratePrivateKey != nil {
-		return nil, nil, errorGeneratePrivateKey
+		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGeneratePrivateKey
 	}
+	// Generate public key
 	generatePublicKey, errorGeneratePublicKey := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
 	if errorGeneratePublicKey != nil {
-		return nil, nil, errorGeneratePublicKey
+		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGeneratePublicKey
 	}
-	return generatePrivateKey, generatePublicKey, nil
+	return base64.StdEncoding.EncodeToString(generatePrivateKey), base64.StdEncoding.EncodeToString(generatePublicKey), nil
 }
 
-// Generate new key pair in pem formated
+// Generate new key pair in pem formated.
 func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 	// Generate new key
 	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
