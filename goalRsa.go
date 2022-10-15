@@ -51,7 +51,25 @@ func extractRSAPublicKey(pemFormatPKCS8PublicKey string) (*rsa.PublicKey, error)
 }
 
 // Generate new key pair
-func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
+func NewRsaKeyPair(keyBitsSize int) ([]byte, []byte, error) {
+	// Generate new key
+	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
+	if errorGenerateKey != nil {
+		return nil, nil, errorGenerateKey
+	}
+	generatePrivateKey, errorGeneratePrivateKey := x509.MarshalPKCS8PrivateKey(generateKey)
+	if errorGeneratePrivateKey != nil {
+		return nil, nil, errorGeneratePrivateKey
+	}
+	generatePublicKey, errorGeneratePublicKey := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
+	if errorGeneratePublicKey != nil {
+		return nil, nil, errorGeneratePublicKey
+	}
+	return generatePrivateKey, generatePublicKey, nil
+}
+
+// Generate new key pair in pem formated
+func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 	// Generate new key
 	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
 	if errorGenerateKey != nil {
@@ -72,13 +90,13 @@ func NewRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
 		return nil, nil, errorCreatePrivatePem
 	}
 	// Format public key to pem
-	publicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
+	convertPublicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
 	if errorPublicKeyBytes != nil {
 		return nil, nil, errorPublicKeyBytes
 	}
 	publicKeyBlock := &pem.Block{
 		Type:  "PUBLIC KEY",
-		Bytes: publicKeyBytes,
+		Bytes: convertPublicKeyBytes,
 	}
 	publicKeyPem := new(bytes.Buffer)
 	errorCreatePublicPem := pem.Encode(publicKeyPem, publicKeyBlock)
