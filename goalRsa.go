@@ -92,11 +92,13 @@ func NewRsaKeyPair(keyBitsSize int) (string, string, error) {
 }
 
 // Generate new key pair in pem formated.
-func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, error) {
+func NewPemFormatRsaKeyPair(keyBitsSize int) (string, string, error) {
+	// Create nil string pointer to return nil on error
+	var nullReturn *string = nil
 	// Generate new key
 	generateKey, errorGenerateKey := rsa.GenerateKey(rand.Reader, keyBitsSize)
 	if errorGenerateKey != nil {
-		return nil, nil, errorGenerateKey
+		return *nullReturn, *nullReturn, errorGenerateKey
 	}
 	// Generate & formatting key pair async with goroutines
 	var privateKeyPem, publicKeyPem *bytes.Buffer
@@ -129,19 +131,19 @@ func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, erro
 	waitGroup.Wait()
 	// Handle error produced from goroutines
 	if errorConvertPrivateKeyBytes != nil {
-		return nil, nil, errorConvertPrivateKeyBytes
+		return *nullReturn, *nullReturn, errorConvertPrivateKeyBytes
 	}
 	if errorConvertPublicKeyBytes != nil {
-		return nil, nil, errorConvertPublicKeyBytes
+		return *nullReturn, *nullReturn, errorConvertPublicKeyBytes
 	}
 	if errorCreatePrivatePem != nil {
-		return nil, nil, errorCreatePrivatePem
+		return *nullReturn, *nullReturn, errorCreatePrivatePem
 	}
 	if errorCreatePublicPem != nil {
-		return nil, nil, errorCreatePublicPem
+		return *nullReturn, *nullReturn, errorCreatePublicPem
 	}
 	// Return result
-	return privateKeyPem, publicKeyPem, nil
+	return privateKeyPem.String(), publicKeyPem.String(), nil
 }
 
 // Decrypt encrypted data with RSA private key. This method using RSA padding PKCS#1 v1.5.
