@@ -81,6 +81,7 @@ func NewRsaKeyPair(keyBitsSize int) (string, string, error) {
 		defer waitGroup.Done()
 	}()
 	waitGroup.Wait()
+	// Handle error produced from goroutines
 	if errorGeneratePrivateKey != nil {
 		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGeneratePrivateKey
 	}
@@ -126,6 +127,7 @@ func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, erro
 		defer waitGroup.Done()
 	}()
 	waitGroup.Wait()
+	// Handle error produced from goroutines
 	if errorConvertPrivateKeyBytes != nil {
 		return nil, nil, errorConvertPrivateKeyBytes
 	}
