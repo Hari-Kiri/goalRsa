@@ -12,7 +12,16 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"sync"
 )
+
+// A WaitGroup waits for a collection of goroutines to finish. The main goroutine calls Add to
+// set the number of goroutines to wait for. Then each of the goroutines runs and calls
+// Done when finished. At the same time, Wait can be used to block until all goroutines
+// have finished.
+//
+// A WaitGroup must not be copied after first use.
+var waitGroup sync.WaitGroup
 
 // Extract RSA private key from string PEM format
 func extractRSAPrivateKey(pemFormatPKCS8PrivateKey string) (*rsa.PrivateKey, error) {
@@ -57,13 +66,24 @@ func NewRsaKeyPair(keyBitsSize int) (string, string, error) {
 	if errorGenerateKey != nil {
 		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGenerateKey
 	}
-	// Generate private key
-	generatePrivateKey, errorGeneratePrivateKey := x509.MarshalPKCS8PrivateKey(generateKey)
+	// Generate key pair async with goroutines
+	var generatePrivateKey, generatePublicKey []byte
+	var errorGeneratePrivateKey, errorGeneratePublicKey error
+	waitGroup.Add(2)
+	go func() {
+		// Generate private key
+		generatePrivateKey, errorGeneratePrivateKey = x509.MarshalPKCS8PrivateKey(generateKey)
+		defer waitGroup.Done()
+	}()
+	go func() {
+		// Generate public key
+		generatePublicKey, errorGeneratePublicKey = x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
+		defer waitGroup.Done()
+	}()
+	waitGroup.Wait()
 	if errorGeneratePrivateKey != nil {
 		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGeneratePrivateKey
 	}
-	// Generate public key
-	generatePublicKey, errorGeneratePublicKey := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
 	if errorGeneratePublicKey != nil {
 		return base64.StdEncoding.EncodeToString(nil), base64.StdEncoding.EncodeToString(nil), errorGeneratePublicKey
 	}
@@ -77,31 +97,44 @@ func NewPemFormatRsaKeyPair(keyBitsSize int) (*bytes.Buffer, *bytes.Buffer, erro
 	if errorGenerateKey != nil {
 		return nil, nil, errorGenerateKey
 	}
-	// Format private key to pem
-	convertPrivateKeyBytes, errorConvertPrivateKeyBytes := x509.MarshalPKCS8PrivateKey(generateKey)
+	// Generate & formatting key pair async with goroutines
+	var privateKeyPem, publicKeyPem *bytes.Buffer
+	var convertPrivateKeyBytes, convertPublicKeyBytes []byte
+	var errorConvertPrivateKeyBytes, errorConvertPublicKeyBytes error
+	var errorCreatePrivatePem, errorCreatePublicPem error
+	waitGroup.Add(2)
+	go func() {
+		// Generate & formatting private key to pem
+		convertPrivateKeyBytes, errorConvertPrivateKeyBytes = x509.MarshalPKCS8PrivateKey(generateKey)
+		privateKeyBlock := &pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: convertPrivateKeyBytes,
+		}
+		privateKeyPem = new(bytes.Buffer)
+		errorCreatePrivatePem = pem.Encode(privateKeyPem, privateKeyBlock)
+		defer waitGroup.Done()
+	}()
+	go func() {
+		// Generate & formatting public key to pem
+		convertPublicKeyBytes, errorConvertPublicKeyBytes = x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
+		publicKeyBlock := &pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: convertPublicKeyBytes,
+		}
+		publicKeyPem = new(bytes.Buffer)
+		errorCreatePublicPem = pem.Encode(publicKeyPem, publicKeyBlock)
+		defer waitGroup.Done()
+	}()
+	waitGroup.Wait()
 	if errorConvertPrivateKeyBytes != nil {
 		return nil, nil, errorConvertPrivateKeyBytes
 	}
-	privateKeyBlock := &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: convertPrivateKeyBytes,
+	if errorConvertPublicKeyBytes != nil {
+		return nil, nil, errorConvertPublicKeyBytes
 	}
-	privateKeyPem := new(bytes.Buffer)
-	errorCreatePrivatePem := pem.Encode(privateKeyPem, privateKeyBlock)
 	if errorCreatePrivatePem != nil {
 		return nil, nil, errorCreatePrivatePem
 	}
-	// Format public key to pem
-	convertPublicKeyBytes, errorPublicKeyBytes := x509.MarshalPKIXPublicKey(&generateKey.PublicKey)
-	if errorPublicKeyBytes != nil {
-		return nil, nil, errorPublicKeyBytes
-	}
-	publicKeyBlock := &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: convertPublicKeyBytes,
-	}
-	publicKeyPem := new(bytes.Buffer)
-	errorCreatePublicPem := pem.Encode(publicKeyPem, publicKeyBlock)
 	if errorCreatePublicPem != nil {
 		return nil, nil, errorCreatePublicPem
 	}
